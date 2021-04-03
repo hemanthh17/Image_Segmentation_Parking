@@ -1,4 +1,52 @@
 # Mask R-CNN for Object Detection and Segmentation
+## How to solve your error
+your code will face error so you will need to tweak in model.py cloned from mrcnn repo (https://github.com/matterport/Mask_RCNN/tree/master/mrcnn).
+1) First make the change suggested in this issue box 
+The following steps worked for me:
+
+1. Upgrade the scripts by using the following line on the root folder:
+
+tf_upgrade_v2 --intree Mask_RCNN --inplace --reportfile report.txt
+
+This will automatically update the existing code to TF2. You will also get a list of changes made in report.txt
+
+2. Replace the following line:
+
+mrcnn_bbox = layers.Reshape((-1, num_classes, 4), name="mrcnn_bbox")(x)
+with this this if-else code block:
+
+if s[1]==None:
+  mrcnn_bbox = layers.Reshape((-1, num_classes, 4), name="mrcnn_bbox")(x)
+ else:
+  mrcnn_bbox = layers.Reshape((s[1], num_classes, 4), name="mrcnn_bbox")(x)
+3. Change the following line:
+
+indices = tf.stack([tf.range(probs.shape[0]), class_ids], axis=1)
+with this line:
+
+indices = tf.stack([tf.range(tf.shape(probs)[0]), class_ids], axis = 1)
+
+4. Now, you need to replace:
+
+from keras import saving
+with:
+
+from tensorflow.python.keras import saving
+then you will also want to replace the lines in both if and else block:
+
+saving.load_weights_from_hdf5_group(f, layers)
+and so on with the follwoing lines, inside if and else block respectively:
+
+saving.hdf5_format.load_weights_from_hdf5_group_by_name(f, layers)
+
+saving.hdf5_format.load_weights_from_hdf5_group(f, layers)
+
+2) instead of import tensorflow as tf write this 
+ import tensorflow.compat.v1 as tf
+
+3) If you are using conda make sure you use conda install rather than pip (prefer conda over pip it will solve most of your dependency error
+
+
 
 This is an implementation of [Mask R-CNN](https://arxiv.org/abs/1703.06870) on Python 3, Keras, and TensorFlow. The model generates bounding boxes and segmentation masks for each instance of an object in the image. It's based on Feature Pyramid Network (FPN) and a ResNet101 backbone.
 
